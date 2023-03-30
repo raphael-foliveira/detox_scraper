@@ -131,7 +131,6 @@ def get_recipes() -> None:
         recipe_type_list = page.locator(recipe_type_list_selector).all()
         print("recipe_type_list:")
         print(recipe_type_list)
-        curr_url = ""
 
         for rt in recipe_type_list:
             print("getting recipe list for type:", rt.inner_text().strip())
