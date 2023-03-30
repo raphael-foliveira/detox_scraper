@@ -1,4 +1,3 @@
-import asyncio
 import json
 from time import sleep
 import os
@@ -8,7 +7,6 @@ import requests
 from playwright.sync_api import (
     Page,
     sync_playwright,
-    TimeoutError,
 )
 
 
