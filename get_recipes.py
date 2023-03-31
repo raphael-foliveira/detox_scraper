@@ -26,13 +26,12 @@ def handle_modal(page: Page) -> None:
     return
 
 
-def click_back_button(page: Page, fallback: Locator, tries=0) -> None:
+def click_back_button(page: Page, tries=0) -> None:
     try:
         back_button = page.locator("button.back-button").all()[-1]
         if back_button is None or not back_button.is_visible():
             print("back button not visible. returning...")
             page.keyboard.press("Escape")
-            fallback.click()
             return
         back_button.click(timeout=1000)
         print("back button clicked")
@@ -41,7 +40,7 @@ def click_back_button(page: Page, fallback: Locator, tries=0) -> None:
         page.keyboard.press("Escape")
         if tries > 3:
             return
-        click_back_button(page, fallback, tries + 1)
+        click_back_button(page, tries + 1)
 
 
 def save_image(recipe: RecipeInfo):
@@ -106,7 +105,7 @@ def get_recipes_from_recipes_list(page: Page, recipe_type: Locator) -> list[Reci
             print("error:", e)
         finally:
             if recipe is not None:
-                click_back_button(page, recipe_type)
+                click_back_button(page)
     return recipes
 
 
@@ -140,4 +139,4 @@ def get_recipes() -> None:
                 rt.click()
             finally:
                 if len(recipes) > 0:
-                    click_back_button(page, rt)
+                    click_back_button(page)
