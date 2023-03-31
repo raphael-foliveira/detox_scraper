@@ -15,18 +15,7 @@ class RecipeInfo(TypedDict):
     card_html: str
 
 
-def handle_modal(page: Page) -> None:
-    modal_button = page.query_selector("ion-grid button")
-    if modal_button is None:
-        print("no modal detected")
-        page.keyboard.press("Escape")
-        return
-    print("modal detected")
-    page.keyboard.press("Escape")
-    return
-
-
-def click_back_button(page: Page, tries=0) -> None:
+def __click_back_button(page: Page, tries=0) -> None:
     try:
         back_button = page.locator("button.back-button").all()[-1]
         if back_button is None or not back_button.is_visible():
@@ -40,10 +29,10 @@ def click_back_button(page: Page, tries=0) -> None:
         page.keyboard.press("Escape")
         if tries > 3:
             return
-        click_back_button(page, tries + 1)
+        __click_back_button(page, tries + 1)
 
 
-def save_image(recipe: RecipeInfo):
+def __save_image(recipe: RecipeInfo):
     response = requests.get(recipe["image_url"])
     directory_path = f"./images/{recipe['type']}/{recipe['title']}/"
     os.makedirs(
@@ -60,7 +49,7 @@ def save_image(recipe: RecipeInfo):
         json.dump(recipe, f)
 
 
-def get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
+def __get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
     card_handle = page.wait_for_selector("div.card", timeout=2000)
     if card_handle is None:
         print("no card detected")
@@ -80,11 +69,14 @@ def get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
         type=recipe_type,
         image_url=image_url,
     )
-    save_image(recipe)
+    __save_image(recipe)
     return recipe
 
 
-def get_recipes_from_recipes_list(page: Page, recipe_type: Locator) -> list[RecipeInfo]:
+def __get_recipes_from_recipes_list(
+    page: Page, recipe_type: Locator
+) -> list[RecipeInfo]:
+    sleep(2)
     recipes = []
 
     recipe_elements = page.locator(
@@ -98,13 +90,13 @@ def get_recipes_from_recipes_list(page: Page, recipe_type: Locator) -> list[Reci
     for recipe in recipe_elements:
         try:
             recipe.click()
-            recipe = get_recipe_info(page, recipes_type.strip())
+            recipe = __get_recipe_info(page, recipes_type.strip())
             recipes.append(recipe)
         except Exception as e:
             print("error:", e)
         finally:
             if recipe is not None:
-                click_back_button(page)
+                __click_back_button(page)
     return recipes
 
 
@@ -125,18 +117,17 @@ def get_recipes() -> None:
         recipe_type_list = page.locator(recipe_type_list_selector).all()
 
         for recipe_type in recipe_type_list:
-            sleep(2)
             print("getting recipe list for type:", recipe_type.inner_text().strip())
             type_name = recipe_type.inner_text().strip()
 
             try:
                 recipe_type.click()
                 print("clicked recipe type:", type_name)
-                recipes = get_recipes_from_recipes_list(page, recipe_type)
+                recipes = __get_recipes_from_recipes_list(page, recipe_type)
                 print("got recipes")
             except Exception as e:
                 print("error:", e)
                 recipe_type.click()
             finally:
                 if len(recipes) > 0:
-                    click_back_button(page)
+                    __click_back_button(page)
