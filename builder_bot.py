@@ -57,13 +57,14 @@ def __add_recipes(page: Page):
 
 
 def __delete_recipes(page: Page):
+    time.sleep(1)
     existing_recipes = page.locator("div > div#pageItems > div").all()
     if len(existing_recipes) == 0:
         return
     existing_recipes[0].hover()
     existing_recipes[0].locator("mat-icon").all()[-1].click()
     page.locator("span").get_by_text("Excluir").click()
-    time.sleep(1)
+    time.sleep(2)
     __delete_recipes(page)
 
 
@@ -84,7 +85,7 @@ def __edit_recipe_types(page: Page, elements: list[Locator]):
         ).click()
 
 
-def edit_app(page: Page):
+def __edit_app(page: Page):
     time.sleep(3)
     page.get_by_text("Editar app").all()[0].click()
 
@@ -106,7 +107,8 @@ def edit_app(page: Page):
     __edit_recipe_types(page, recipe_type_elements)
 
 
-def access_app(page: Page):
+def __access_app(page: Page):
+    time.sleep(4)
     page.wait_for_selector("a[mat-tab-link]")
     access_app_btn = page.get_by_text("Acessar App")
 
@@ -116,7 +118,7 @@ def access_app(page: Page):
     access_app_btn.click()
 
 
-def login(page: Page):
+def __login(page: Page):
     assert EMAIL is not None
     assert PASSWORD is not None
     page.wait_for_selector("input[formcontrolname]")
@@ -146,9 +148,9 @@ def build_app():
 
         page.goto("https://studio.fabricadeaplicativos.com.br/painel/signin")
 
-        login(page)
-        access_app(page)
-        edit_app(page)
+        __login(page)
+        __access_app(page)
+        __edit_app(page)
         print("done")
 
 
