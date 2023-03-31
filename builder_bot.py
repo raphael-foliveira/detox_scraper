@@ -84,7 +84,7 @@ def edit_recipe_types(page: Page, elements: list[Locator]):
         ).click()
 
 
-def editar_app(page: Page):
+def edit_app(page: Page):
     time.sleep(3)
     page.get_by_text("Editar app").all()[0].click()
 
@@ -148,8 +148,8 @@ def build_app():
 
         login(page)
         access_app(page)
-        editar_app(page)
-        time.sleep(1000)
+        edit_app(page)
+        print("done")
 
 
 if __name__ == "__main__":
