@@ -103,7 +103,10 @@ def __get_recipes_from_recipes_list(
                 recipe_type_element.click()
                 __get_recipes_from_recipes_list(page, recipe_type_element, start_from)
             except:
-                print("unable to click recipe type. probably stuck somewhere else")
+                print(
+                    "unable to click recipe type. probably stuck somewhere else. returning..."
+                )
+                break
 
     return recipes
 
@@ -135,7 +138,6 @@ def get_recipes() -> None:
                 print("got recipes")
             except Exception as e:
                 print("error:", e)
-                recipe_type.click()
             finally:
                 if len(recipes) > 0:
                     __click_back_button(page)

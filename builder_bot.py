@@ -120,7 +120,7 @@ def login(page: Page):
     assert EMAIL is not None
     assert PASSWORD is not None
     page.wait_for_selector("input[formcontrolname]")
-    email_input = page.locator("input[formcontrolname]")
+    email_input = page.get_by_placeholder("E-mail")
 
     email_input.fill(EMAIL)
 
@@ -130,7 +130,7 @@ def login(page: Page):
 
     time.sleep(2)
 
-    password_input = page.locator("input[formcontrolname]")
+    password_input = page.get_by_placeholder("Digite sua senha")
 
     password_input.fill(PASSWORD)
 
