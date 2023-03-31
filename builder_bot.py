@@ -13,7 +13,7 @@ EMAIL = os.getenv("APP_BUILDER_USERNAME")
 PASSWORD = os.getenv("APP_BUILDER_PASSWORD")
 
 
-def add_single_recipe(page: Page, folder_path: str):
+def __add_single_recipe(page: Page, folder_path: str):
     page.get_by_text("Adicionar item").click()
     title_input = page.locator("input[type=text]").all()[0]
     codigo_fonte_btn = page.get_by_text("Código-Fonte")
@@ -42,7 +42,7 @@ def add_single_recipe(page: Page, folder_path: str):
     page.locator('button[type="submit"]').click()
 
 
-def add_recipes(page: Page):
+def __add_recipes(page: Page):
     recipe_type = page.locator("div > input.mat-input-element").input_value()
     try:
         recipe_type_path = os.listdir(f"images/{recipe_type}")
@@ -52,11 +52,11 @@ def add_recipes(page: Page):
     for recipe_folder in recipe_type_path:
         recipe_path = f"images/{recipe_type}/{recipe_folder}"
         print(recipe_path)
-        add_single_recipe(page, recipe_path)
+        __add_single_recipe(page, recipe_path)
         time.sleep(2)
 
 
-def delete_recipes(page: Page):
+def __delete_recipes(page: Page):
     existing_recipes = page.locator("div > div#pageItems > div").all()
     if len(existing_recipes) == 0:
         return
@@ -64,16 +64,16 @@ def delete_recipes(page: Page):
     existing_recipes[0].locator("mat-icon").all()[-1].click()
     page.locator("span").get_by_text("Excluir").click()
     time.sleep(1)
-    delete_recipes(page)
+    __delete_recipes(page)
 
 
-def edit_recipe_types(page: Page, elements: list[Locator]):
+def __edit_recipe_types(page: Page, elements: list[Locator]):
     for element in elements:
         element.click()
         time.sleep(4)
 
-        delete_recipes(page)
-        add_recipes(page)
+        __delete_recipes(page)
+        __add_recipes(page)
 
         page.locator("div.header > div > button").click()  # back button
         time.sleep(2)
@@ -103,7 +103,7 @@ def edit_app(page: Page):
     time.sleep(2)
     recipe_type_elements = page.locator("div.-subpage").all()
     print(recipe_type_elements)
-    edit_recipe_types(page, recipe_type_elements)
+    __edit_recipe_types(page, recipe_type_elements)
 
 
 def access_app(page: Page):

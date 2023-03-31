@@ -85,7 +85,6 @@ def get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
 
 
 def get_recipes_from_recipes_list(page: Page, recipe_type: Locator) -> list[RecipeInfo]:
-    sleep(2)
     recipes = []
 
     recipe_elements = page.locator(
@@ -124,19 +123,20 @@ def get_recipes() -> None:
 
         page.wait_for_selector(recipe_type_list_selector, timeout=10000)
         recipe_type_list = page.locator(recipe_type_list_selector).all()
-        print("recipe_type_list:")
-        print(recipe_type_list)
 
-        for rt in recipe_type_list:
-            print("getting recipe list for type:", rt.inner_text().strip())
+        for recipe_type in recipe_type_list:
+            sleep(2)
+            print("getting recipe list for type:", recipe_type.inner_text().strip())
+            type_name = recipe_type.inner_text().strip()
+
             try:
-                rt.click()
-                print("clicked recipe type:", rt.inner_text().strip())
-                recipes = get_recipes_from_recipes_list(page, rt)
+                recipe_type.click()
+                print("clicked recipe type:", type_name)
+                recipes = get_recipes_from_recipes_list(page, recipe_type)
                 print("got recipes")
             except Exception as e:
                 print("error:", e)
-                rt.click()
+                recipe_type.click()
             finally:
                 if len(recipes) > 0:
                     click_back_button(page)
