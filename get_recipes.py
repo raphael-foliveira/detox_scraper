@@ -34,9 +34,9 @@ def __click_back_button(page: Page, tries=0) -> None:
 
 def __save_image(recipe: RecipeInfo):
     response = requests.get(recipe["image_url"])
-    directory_path = f"./images/{recipe['type']}/{recipe['title']}/"
+    directory_path = f"./images/{recipe['type']}/{recipe['title']}/".lower()
     os.makedirs(
-        directory_path,
+        directory_path.lower(),
         exist_ok=True,
     )
     print("directory created")
@@ -86,7 +86,6 @@ def __get_recipes_from_recipes_list(
     print(recipe_elements)
 
     recipes_type = page.locator("div.toolbar-title").all()[-1].inner_text()
-    recipe = None
     for recipe in recipe_elements[start_from:]:
         try:
             recipe.click()
@@ -106,7 +105,7 @@ def __get_recipes_from_recipes_list(
                 print(
                     "unable to click recipe type. probably stuck somewhere else. returning..."
                 )
-                break
+                return recipes
 
     return recipes
 
@@ -141,3 +140,7 @@ def get_recipes() -> None:
             finally:
                 if len(recipes) > 0:
                     __click_back_button(page)
+
+
+if __name__ == "__main__":
+    get_recipes()

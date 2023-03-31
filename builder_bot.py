@@ -45,12 +45,12 @@ def __add_single_recipe(page: Page, folder_path: str):
 def __add_recipes(page: Page):
     recipe_type = page.locator("div > input.mat-input-element").input_value()
     try:
-        recipe_type_path = os.listdir(f"images/{recipe_type}")
+        recipe_type_path = os.listdir(f"images/{recipe_type}".lower())
     except Exception as e:
         print(e)
         return
     for recipe_folder in recipe_type_path:
-        recipe_path = f"images/{recipe_type}/{recipe_folder}"
+        recipe_path = f"images/{recipe_type}/{recipe_folder}".lower()
         print(recipe_path)
         __add_single_recipe(page, recipe_path)
         time.sleep(2)
