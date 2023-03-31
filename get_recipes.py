@@ -4,10 +4,7 @@ import os
 from typing import TypedDict
 
 import requests
-from playwright.sync_api import (
-    Page,
-    sync_playwright,
-)
+from playwright.sync_api import Page, sync_playwright, Locator
 
 
 class RecipeInfo(TypedDict):
@@ -29,12 +26,13 @@ def handle_modal(page: Page) -> None:
     return
 
 
-def click_back_button(page: Page, tries=0) -> None:
+def click_back_button(page: Page, fallback: Locator, tries=0) -> None:
     try:
         back_button = page.locator("button.back-button").all()[-1]
         if back_button is None or not back_button.is_visible():
             print("back button not visible. returning...")
             page.keyboard.press("Escape")
+            fallback.click()
             return
         back_button.click(timeout=1000)
         print("back button clicked")
@@ -43,7 +41,7 @@ def click_back_button(page: Page, tries=0) -> None:
         page.keyboard.press("Escape")
         if tries > 3:
             return
-        click_back_button(page, tries + 1)
+        click_back_button(page, fallback, tries + 1)
 
 
 def save_image(recipe: RecipeInfo):
@@ -54,7 +52,7 @@ def save_image(recipe: RecipeInfo):
         exist_ok=True,
     )
     print("directory created")
-    with open(f"{directory_path}/image.png", "wb") as f:
+    with open(f"{directory_path}/image.webp", "wb") as f:
         print("saving image to:", directory_path)
         f.write(response.content)
 
@@ -69,7 +67,7 @@ def get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
         print("no card detected")
         return None
 
-    recipe_html = page.locator("div.card").inner_html()
+    recipe_html = page.locator("div.card > .card-content").inner_html()
     title = page.locator("div.card ion-card-title").inner_text()
     description = page.locator("div.card div.description-wrapper").inner_text()
     image_url = page.locator("div.card img").get_attribute("src")
@@ -87,7 +85,7 @@ def get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
     return recipe
 
 
-def get_recipes_from_recipes_list(page: Page) -> list[RecipeInfo]:
+def get_recipes_from_recipes_list(page: Page, recipe_type: Locator) -> list[RecipeInfo]:
     sleep(2)
     recipes = []
 
@@ -108,7 +106,7 @@ def get_recipes_from_recipes_list(page: Page) -> list[RecipeInfo]:
             print("error:", e)
         finally:
             if recipe is not None:
-                click_back_button(page)
+                click_back_button(page, recipe_type)
     return recipes
 
 
@@ -135,11 +133,11 @@ def get_recipes() -> None:
             try:
                 rt.click()
                 print("clicked recipe type:", rt.inner_text().strip())
-                recipes = get_recipes_from_recipes_list(page)
+                recipes = get_recipes_from_recipes_list(page, rt)
                 print("got recipes")
             except Exception as e:
                 print("error:", e)
                 rt.click()
             finally:
                 if len(recipes) > 0:
-                    click_back_button(page)
+                    click_back_button(page, rt)
