@@ -73,9 +73,7 @@ def __get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
     return recipe
 
 
-def __get_recipes_from_recipes_list(
-    page: Page, recipe_type: Locator
-) -> list[RecipeInfo]:
+def __get_recipes_from_recipes_list(page: Page) -> list[RecipeInfo]:
     sleep(2)
     recipes = []
 
@@ -123,7 +121,7 @@ def get_recipes() -> None:
             try:
                 recipe_type.click()
                 print("clicked recipe type:", type_name)
-                recipes = __get_recipes_from_recipes_list(page, recipe_type)
+                recipes = __get_recipes_from_recipes_list(page)
                 print("got recipes")
             except Exception as e:
                 print("error:", e)
