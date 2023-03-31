@@ -32,7 +32,7 @@ def __add_single_recipe(page: Page, folder_path: str):
         file_chooser = fc_info.value
         file_chooser.set_files(f"{folder_path}/image.png")
 
-    time.sleep(5)
+    time.sleep(3)
     title_input.fill(recipe_info["title"])
     codigo_fonte_btn.click()
     time.sleep(1)
