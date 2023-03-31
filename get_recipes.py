@@ -19,7 +19,7 @@ def __click_back_button(page: Page, tries=0) -> None:
     try:
         back_button = page.locator("button.back-button").all()[-1]
         if back_button is None or not back_button.is_visible():
-            print("back button not visible. returning...")
+            print("back button not visible. clicking fallback  and returning...")
             page.keyboard.press("Escape")
             return
         back_button.click(timeout=1000)
@@ -73,7 +73,9 @@ def __get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
     return recipe
 
 
-def __get_recipes_from_recipes_list(page: Page) -> list[RecipeInfo]:
+def __get_recipes_from_recipes_list(
+    page: Page, recipe_type_element: Locator, start_from: int = 0
+) -> list[RecipeInfo]:
     sleep(2)
     recipes = []
 
@@ -85,16 +87,24 @@ def __get_recipes_from_recipes_list(page: Page) -> list[RecipeInfo]:
 
     recipes_type = page.locator("div.toolbar-title").all()[-1].inner_text()
     recipe = None
-    for recipe in recipe_elements:
+    for recipe in recipe_elements[start_from:]:
         try:
             recipe.click()
             recipe = __get_recipe_info(page, recipes_type.strip())
             recipes.append(recipe)
-        except Exception as e:
-            print("error:", e)
-        finally:
+            start_from += 1
             if recipe is not None:
                 __click_back_button(page)
+        except Exception as e:
+            print("error:", e)
+            __click_back_button(page)
+            try:
+                print("maybe stuck on recipe types page... clicking recipe type button")
+                recipe_type_element.click()
+                __get_recipes_from_recipes_list(page, recipe_type_element, start_from)
+            except:
+                print("unable to click recipe type. probably stuck somewhere else")
+
     return recipes
 
 
@@ -121,7 +131,7 @@ def get_recipes() -> None:
             try:
                 recipe_type.click()
                 print("clicked recipe type:", type_name)
-                recipes = __get_recipes_from_recipes_list(page)
+                recipes = __get_recipes_from_recipes_list(page, recipe_type)
                 print("got recipes")
             except Exception as e:
                 print("error:", e)
