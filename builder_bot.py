@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from get_recipes import RecipeInfo
 from PIL import Image
 import os
-import keyboard
 
 load_dotenv()
 
