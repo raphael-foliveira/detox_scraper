@@ -2,7 +2,7 @@ import json
 import time
 from playwright.sync_api import sync_playwright, Page, Locator
 from dotenv import load_dotenv
-from get_recipes import RecipeInfo
+from models import RecipeInfo
 from PIL import Image
 import os
 

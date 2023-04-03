@@ -1,18 +1,10 @@
 import json
 from time import sleep
 import os
-from typing import TypedDict
 
 import requests
 from playwright.sync_api import Page, sync_playwright, Locator
-
-
-class RecipeInfo(TypedDict):
-    type: str
-    title: str
-    description: str
-    image_url: str
-    card_html: str
+from models import RecipeInfo
 
 
 def __click_back_button(page: Page, tries=0) -> None:
