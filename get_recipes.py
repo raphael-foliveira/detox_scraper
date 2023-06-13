@@ -1,41 +1,17 @@
-import asyncio
 import json
 from time import sleep
 import os
-from typing import TypedDict
 
 import requests
-from playwright.sync_api import (
-    Page,
-    sync_playwright,
-    TimeoutError,
-)
+from playwright.sync_api import Page, sync_playwright, Locator
+from models import RecipeInfo
 
 
-class RecipeInfo(TypedDict):
-    type: str
-    title: str
-    description: str
-    image_url: str
-    card_html: str
-
-
-def handle_modal(page: Page) -> None:
-    modal_button = page.query_selector("ion-grid button")
-    if modal_button is None:
-        print("no modal detected")
-        page.keyboard.press("Escape")
-        return
-    print("modal detected")
-    page.keyboard.press("Escape")
-    return
-
-
-def click_back_button(page: Page, tries=0) -> None:
+def __click_back_button(page: Page, tries=0) -> None:
     try:
         back_button = page.locator("button.back-button").all()[-1]
         if back_button is None or not back_button.is_visible():
-            print("back button not visible. returning...")
+            print("back button not visible. clicking fallback  and returning...")
             page.keyboard.press("Escape")
             return
         back_button.click(timeout=1000)
@@ -45,18 +21,18 @@ def click_back_button(page: Page, tries=0) -> None:
         page.keyboard.press("Escape")
         if tries > 3:
             return
-        click_back_button(page, tries + 1)
+        __click_back_button(page, tries + 1)
 
 
-def save_image(recipe: RecipeInfo):
+def __save_image(recipe: RecipeInfo):
     response = requests.get(recipe["image_url"])
-    directory_path = f"./images/{recipe['type']}/{recipe['title']}/"
+    directory_path = f"./images/{recipe['type']}/{recipe['title']}/".lower()
     os.makedirs(
-        directory_path,
+        directory_path.lower(),
         exist_ok=True,
     )
     print("directory created")
-    with open(f"{directory_path}/image.png", "wb") as f:
+    with open(f"{directory_path}/image.webp", "wb") as f:
         print("saving image to:", directory_path)
         f.write(response.content)
 
@@ -65,13 +41,13 @@ def save_image(recipe: RecipeInfo):
         json.dump(recipe, f)
 
 
-def get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
+def __get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
     card_handle = page.wait_for_selector("div.card", timeout=2000)
     if card_handle is None:
         print("no card detected")
         return None
 
-    recipe_html = page.locator("div.card").inner_html()
+    recipe_html = page.locator("div.card > .card-content").inner_html()
     title = page.locator("div.card ion-card-title").inner_text()
     description = page.locator("div.card div.description-wrapper").inner_text()
     image_url = page.locator("div.card img").get_attribute("src")
@@ -85,11 +61,13 @@ def get_recipe_info(page: Page, recipe_type: str) -> RecipeInfo | None:
         type=recipe_type,
         image_url=image_url,
     )
-    save_image(recipe)
+    __save_image(recipe)
     return recipe
 
 
-def get_recipes_from_recipes_list(page: Page) -> list[RecipeInfo]:
+def __get_recipes_from_recipes_list(
+    page: Page, recipe_type_element: Locator, start_from: int = 0
+) -> list[RecipeInfo]:
     sleep(2)
     recipes = []
 
@@ -100,17 +78,27 @@ def get_recipes_from_recipes_list(page: Page) -> list[RecipeInfo]:
     print(recipe_elements)
 
     recipes_type = page.locator("div.toolbar-title").all()[-1].inner_text()
-    recipe = None
-    for recipe in recipe_elements:
+    for recipe in recipe_elements[start_from:]:
         try:
             recipe.click()
-            recipe = get_recipe_info(page, recipes_type.strip())
+            recipe = __get_recipe_info(page, recipes_type.strip())
             recipes.append(recipe)
+            start_from += 1
+            if recipe is not None:
+                __click_back_button(page)
         except Exception as e:
             print("error:", e)
-        finally:
-            if recipe is not None:
-                click_back_button(page)
+            __click_back_button(page)
+            try:
+                print("maybe stuck on recipe types page... clicking recipe type button")
+                recipe_type_element.click()
+                __get_recipes_from_recipes_list(page, recipe_type_element, start_from)
+            except:
+                print(
+                    "unable to click recipe type. probably stuck somewhere else. returning..."
+                )
+                return recipes
+
     return recipes
 
 
@@ -129,20 +117,22 @@ def get_recipes() -> None:
 
         page.wait_for_selector(recipe_type_list_selector, timeout=10000)
         recipe_type_list = page.locator(recipe_type_list_selector).all()
-        print("recipe_type_list:")
-        print(recipe_type_list)
-        curr_url = ""
 
-        for rt in recipe_type_list:
-            print("getting recipe list for type:", rt.inner_text().strip())
+        for recipe_type in recipe_type_list:
+            print("getting recipe list for type:", recipe_type.inner_text().strip())
+            type_name = recipe_type.inner_text().strip()
+
             try:
-                rt.click()
-                print("clicked recipe type:", rt.inner_text().strip())
-                recipes = get_recipes_from_recipes_list(page)
+                recipe_type.click()
+                print("clicked recipe type:", type_name)
+                recipes = __get_recipes_from_recipes_list(page, recipe_type)
                 print("got recipes")
             except Exception as e:
                 print("error:", e)
-                rt.click()
             finally:
                 if len(recipes) > 0:
-                    click_back_button(page)
+                    __click_back_button(page)
+
+
+if __name__ == "__main__":
+    get_recipes()
